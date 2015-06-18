@@ -1,10 +1,11 @@
 {
    "name": "BacklogGroomer",
    "className": "CustomApp",
-   "server": "https://rally1.rallydev.com",
+   "server": "https://demo-west.rallydev.com",
    "sdk": "2.0",
    "javascript": [
-      "App.js"
+      "App.js",
+      "DragDrop.js"
    ],
    "css": [
       "app.css"
