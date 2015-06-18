@@ -105,6 +105,7 @@ Ext.define('CustomApp', {
       });
       
       this.rightContainer = Ext.create('Ext.Container', {
+        id: 'rightcontainer',
         flex: 2,
         align: 'stretch'
       });
@@ -180,6 +181,24 @@ Ext.define('CustomApp', {
           'ScheduleState',
           'Owner'
         ],
+        rowActionColumnConfig: {
+              xtype: 'rallyrowactioncolumn',
+              rowActionsFn: function (record) {
+                  return [
+                    { 
+                      text: 'Split Child Stories...', 
+                      record: record, 
+                      handler: function(){ 
+                        Ext.create('childuserstoriespopover', {
+                            field: 'UserStory',
+                            record: record,
+                            target: 'rightcontainer'
+                        }, record);
+                      }
+                    }
+                  ];
+              }
+        },
         padding: '5'
       });
     },
