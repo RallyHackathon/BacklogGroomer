@@ -7,7 +7,7 @@
 
     <script type="text/javascript">
         Rally.onReady(function () {
-                Ext.define("CustomApp",{extend:"Rally.app.App",componentCls:"app",launch:function(){}});
+                Ext.define("CustomApp",{extend:"Rally.app.App",componentCls:"app",launch:function(){Ext.create("Rally.data.wsapi.TreeStoreBuilder").build({models:["userstory"],autoLoad:!0,enableHierarchy:!0}).then({success:this._onStoreBuilt,scope:this})},_onStoreBuilt:function(store){this.add({xtype:"rallytreegrid",store:store,context:this.getContext(),columnCfgs:["Name","ScheduleState","Owner","PlanEstimate"]})}});
 
             Rally.launchApp('CustomApp', {
                 name:"BacklogGroomer",
