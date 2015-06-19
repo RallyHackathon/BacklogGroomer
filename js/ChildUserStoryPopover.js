@@ -1,7 +1,7 @@
 (function() {
   Ext.define('ChildUserStoriesPopover', {
     alias: 'childuserstoriespopover',
-    extend: 'Rally.ui.popover.Popover',
+    extend: 'Rally.ui.dialog.Dialog',
     clientMetrics: [
       {
         event: 'show',
@@ -15,17 +15,22 @@
 
     id: 'grid-popover',
     cls: 'grid-popover',
-    title: 'Select stories to move...',
+    title: 'Reparent Child Stories...',
     titleIconCls: 'icon-story',
 
     width: 750,
     maxHeight: 600,
 
     layout: 'autocontainer',
+    autoShow: true,
+    closable: true,
+    closeAction: 'destroy',
 
     constructor: function(config, record) {
       this.selectedItemsDictionary = {};
       this.newParent = Ext.create('Rally.ui.combobox.ArtifactSearchComboBox', {
+        emptyText: 'New Parent',
+        allowNoEntry: false,
         storeConfig: {
             models: ['userstory']
         }
@@ -36,6 +41,7 @@
             xtype: 'rallygrid',
             itemId: 'listview',
             enableBulkEdit: true,
+            flex: 2,
             record: config.record,
               storeConfig: {
                 listeners: {
@@ -92,16 +98,32 @@
         config.listViewConfig
       );
       
-      var items = [ 
-        this.childrenGrid,
-        this.newParent,
-        {
-          xtype: 'rallybutton',
-          text: 'Move stories',
-          handler: Ext.bind(this._moveStories, this)
-        }];
-
-      config.items = Ext.merge(items, config.items);
+      var layoutContainer = Ext.create('Ext.container.Container', {
+        layout: {
+          type: 'hbox',
+          align: 'stretch'
+        },
+        flex: 1,
+        defaults: {
+          padding: '5'
+        },
+        items: [ 
+          this.childrenGrid,
+          {
+              xtype: 'container',
+              items: [
+                this.newParent,
+                {
+                  xtype: 'rallybutton',
+                  text: 'Move stories',
+                  handler: Ext.bind(this._moveStories, this)
+                }
+              ]
+          }
+        ]
+      });
+      
+      config.items = [layoutContainer];
       this.record = config.record;
 
       this.callParent(arguments);

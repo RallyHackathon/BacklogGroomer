@@ -260,7 +260,7 @@ Ext.define('CustomApp', {
           rowActionsFn: function (record) {
             return [
               { 
-                text: 'Split Child Stories...', 
+                text: 'Reparent Child Stories...', 
                 record: record, 
                 handler: function(){ 
                   Ext.create('childuserstoriespopover', {
