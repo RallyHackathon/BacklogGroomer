@@ -28,6 +28,8 @@
 
     constructor: function(config, record) {
       this.selectedItemsDictionary = {};
+      this.record = record;
+      this.title = "Reparent Child Stories for " + record.get("FormattedID") + ": " + record.get("Name");  
       
       this.childrenGrid = Ext.merge(
           {
