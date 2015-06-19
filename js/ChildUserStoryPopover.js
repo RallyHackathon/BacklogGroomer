@@ -41,7 +41,6 @@
             xtype: 'rallygrid',
             itemId: 'listview',
             enableBulkEdit: true,
-            flex: 2,
             record: config.record,
               storeConfig: {
                 listeners: {
@@ -103,14 +102,22 @@
           type: 'hbox',
           align: 'stretch'
         },
-        flex: 1,
-        defaults: {
-          padding: '5'
-        },
+        padding: '5 5 5 5',
         items: [ 
-          this.childrenGrid,
           {
-              xtype: 'container',
+              xtype: 'panel',
+              title: 'Select Children',
+              flex: 2,
+              bodyPadding: 5,
+              items: [
+                this.childrenGrid
+              ]
+          },        
+          {
+              xtype: 'panel',
+              title: 'Select Parent',
+              flex: 1,
+              bodyPadding: 5,
               items: [
                 this.newParent,
                 {
@@ -157,6 +164,8 @@
           });
         }
       }
+      
+      this.close();
     },
 
     _recordSaveCallback: function(record, operation) {
