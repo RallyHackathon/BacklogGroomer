@@ -1,4 +1,4 @@
-Ext.define('TreesWithCards', {
+Ext.define('DragDropTree', {
   extend: 'Rally.ui.tree.Tree',
   requires: ['Rally.ui.tree.UserStoryTreeItem'],
 
@@ -65,13 +65,9 @@ Ext.define('TreesWithCards', {
   },
   
   treeItemConfigForRecordFn: function(record){
-      var card = Ext.create('Rally.ui.cardboard.Card', {
-          record: record
-      });
-      debugger;
-      return {
-          xtype: 'rallyuserstorytreeitem'
-      };
+    return {
+        xtype: 'rallyuserstorytreeitem'
+    };
   }
 });
 
@@ -131,7 +127,7 @@ Ext.define('CustomApp', {
                 
         var filter = parentFilter.and(childrenFilter.and(piFilter));
         
-        var orphanStoryTree = Ext.create('TreesWithCards', {
+        var orphanStoryTree = Ext.create('DragDropTree', {
             enableDragAndDrop: true,            
             dragDropGroupFn: function(record){
                 return 'hr';
