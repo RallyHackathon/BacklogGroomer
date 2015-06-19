@@ -1,12 +1,19 @@
+Ext.define('MyTreeItem', {
+     extend: 'Rally.ui.tree.TreeItem',
+     alias: 'widget.mytreeitem',
+
+     //override the function to create a new template for the tree item
+     getContentTpl: function(){
+         return Ext.create('Ext.XTemplate',
+             '{Name} - {ObjectID}'
+         );
+     }
+ });
+
+
 Ext.define('DragDropTree', {
   extend: 'Rally.ui.tree.Tree',
   requires: ['Rally.ui.tree.UserStoryTreeItem'],
-
-  getTreeItemConfigForRecordFn: function(){
-    return function(){
-      xtype: 'rallyuserstorytreeitem'
-    };
-  },
 
   makeTreeItemDraggable: function(treeItem){
     var tree = this;
@@ -66,7 +73,7 @@ Ext.define('DragDropTree', {
   
   treeItemConfigForRecordFn: function(record){
     return {
-        xtype: 'rallyuserstorytreeitem'
+        xtype: 'mytreeitem'
     };
   }
 

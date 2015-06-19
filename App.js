@@ -1,5 +1,6 @@
 Ext.define('CustomApp', {
     extend: 'Rally.app.App',
+    requires: ['Rally.ui.tree.UserStoryTreeItem'],
     componentCls: 'app',
     layout: {
       type: 'vbox',
@@ -95,7 +96,9 @@ Ext.define('CustomApp', {
 
       var subModules = Rally.environment.getContext().getSubscription().Modules;
       
-      return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;
+      return _.contains(subModules, 'Rally Product Manager') || _.contains(subModules, 'Rally Portfolio Manager') ? 
+        parentFilter.and(piFilter) : 
+        parentFilter;
     },
 
     _buildStoryTree: function(expandNode) {
@@ -134,7 +137,7 @@ Ext.define('CustomApp', {
             },
             topLevelStoreConfig: {
                 model: 'User Story',
-                fetch: ['FormattedID', 'Name', 'ObjectID', 'DirectChildrenCount', 'Parent'],
+                fetch: ['FormattedID', 'Name', 'ObjectID', 'DirectChildrenCount', 'ScheduleState', 'Parent'],
                 filters: filter,
                 canDrag: true,
                 sorters: [{
@@ -148,6 +151,9 @@ Ext.define('CustomApp', {
                         }
                     }
                 }
+            },
+            treeItemConfigForRecordFn: function() {
+              return {xtype: 'rallyuserstorytreeitem'};
             }            
         });
         

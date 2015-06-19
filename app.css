@@ -1,5 +1,5 @@
-.app {
-
+.app .treeItem .treeItemContent .textContent {
+    width: 250px;
 }
 
 .dialogHeader {
