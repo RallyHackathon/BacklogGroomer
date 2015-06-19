@@ -167,7 +167,7 @@ Ext.define('customdragdrop', {
             this.view.ownerCt.setLoading(false);
 
             _.each(this.idsToRefresh, function(id) {
-                Ext.ComponentQuery.query('#'+id)[0].refresh();
+                Ext.ComponentQuery.query('#'+id)[0].refresh(overModel);
             }, this);
           },
           scope: this           

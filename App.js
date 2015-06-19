@@ -98,14 +98,16 @@ Ext.define('CustomApp', {
       return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;
     },
 
-    _buildStoryTree: function() {
+    _buildStoryTree: function(expandNode) {
       Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
         models: ['userstory'],
         autoLoad: true,
         enableHierarchy: true,        
         filters: this._getParentFilters()
       }).then({
-        success: this._onStoreBuilt,
+        success: function(store) {
+          this._onStoreBuilt(expandNode, store);
+        },
         scope: this
       });
     },
@@ -186,8 +188,10 @@ Ext.define('CustomApp', {
       this.unparentedStoryTree = this.down('#unparentedStories').add(unparentedStoryTree);
     },
     
-    _onStoreBuilt: function(store) {
-      this.down('#storygrid').add({
+    _onStoreBuilt: function(expandNode, store) {
+      var _buildStoryTree = this._buildStoryTree.bind(this);
+
+      var storyTree = this.down('#storygrid').add({
         xtype: 'rallytreegrid',
         id: 'storyTree',
         store: store,
@@ -197,6 +201,10 @@ Ext.define('CustomApp', {
           'ScheduleState',
           'Owner'
         ],
+        refresh: function(overModel) {
+          this.destroy();
+          _buildStoryTree(overModel);
+        },
         rowActionColumnConfig: {
           xtype: 'rallyrowactioncolumn',
           rowActionsFn: function (record) {

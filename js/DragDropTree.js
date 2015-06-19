@@ -69,4 +69,5 @@ Ext.define('DragDropTree', {
         xtype: 'rallyuserstorytreeitem'
     };
   }
+
 });
