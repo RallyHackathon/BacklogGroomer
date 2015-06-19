@@ -80,12 +80,38 @@ Ext.define('CustomApp', {
     },
 
     launch: function() {
-      this.leftContainer = Ext.create('Ext.Container', {
+      this.leftContainer = Ext.create('Ext.panel.Panel', {
+        bodyPadding: 5,
         flex: 1,
-        align: 'stretch'
+        align: 'stretch',
+        items: [{
+          itemId: 'accContainer',
+          layout: 'accordion',
+          defaults: {
+              bodyPadding: 10
+          },
+          height: '100%',
+          items: [
+            {
+                title: 'Orphaned Stories',
+                itemId: 'orphanStories',
+                resizable: true,
+                autoScroll: true
+            },
+            {
+                title: 'Unparented Stories',
+                itemId: 'unparentedStories',
+                resizable: true,
+                autoScroll: true,
+                height: '100%'
+            }
+          ],
+          flex: 1
+        }]
       });
       
-      this.rightContainer = Ext.create('Ext.Container', {
+      this.rightContainer = Ext.create('Ext.panel.Panel', {
+        bodyPadding: 5,
         id: 'rightcontainer',
         flex: 2,
         align: 'stretch'
@@ -94,6 +120,7 @@ Ext.define('CustomApp', {
       this.add([this.leftContainer, this.rightContainer]);
           
       this.buildOrphanedStoryTree();
+      this.buildUnparentedStoryTree();
       
       Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
         models: ['userstory'],
@@ -148,7 +175,45 @@ Ext.define('CustomApp', {
             }            
         });
         
-        this.leftContainer.add(orphanStoryTree);
+        this.down('#orphanStories').add(orphanStoryTree);
+    },
+
+    buildUnparentedStoryTree: function() {
+      var parentFilter = Ext.create('Rally.data.QueryFilter', {
+          property: 'Parent',
+          value: 'null',
+          operator: '='
+      });
+
+      var filter = parentFilter;
+      
+      var orphanStoryTree = Ext.create('DragDropTree', {
+          enableDragAndDrop: true,            
+          dragDropGroupFn: function(record){
+              return 'hr';
+          },dragThisGroupOnMeFn: function(record){
+              return 'hr';
+          },
+          topLevelStoreConfig: {
+              model: 'User Story',
+              fetch: ['FormattedID', 'Name', 'ObjectID', 'DirectChildrenCount', 'Parent'],
+              filters: filter,
+              canDrag: true,
+              sorters: [{
+                  property: 'Rank',
+                  direction: 'asc'
+              }],
+              listeners: {
+                  load: function(store, records, successful, options) {
+                      if (store.totalCount > 200) {
+                          Rally.ui.notify.Notifier.showError({message: 'There are more than 200 orphaned stories.'});
+                      }
+                  }
+              }
+          }            
+      });
+      
+      this.down('#unparentedStories').add(orphanStoryTree);
     },
     
     _onStoreBuilt: function(store) {
@@ -188,8 +253,7 @@ Ext.define('CustomApp', {
               'customdragdrop',
               'rallyviewvisibilitylistener'
           ]
-        },
-        padding: '5'
+        }
       });
     },
     
@@ -215,8 +279,7 @@ Ext.define('CustomApp', {
               dataIndex: 'Name',
               flex: 1
           }
-        ],
-        padding: '5'
+        ]
       });
     }
 });
