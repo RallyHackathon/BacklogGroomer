@@ -1,17 +1,13 @@
-Ext.define('TreesWithCardsItem', {
-  extend: 'Rally.ui.tree.TreeItem', 
-  xtype: 'treeswithcardsitem',  
-  listeners: {
-  }
-});
-
 Ext.define('TreesWithCards', {
   extend: 'Rally.ui.tree.Tree',
+  requires: ['Rally.ui.tree.UserStoryTreeItem'],
+
   getTreeItemConfigForRecordFn: function(){
     return function(){
-      xtype: 'treeswithcardsitem'
+      xtype: 'rallyuserstorytreeitem'
     };
   },
+
   makeTreeItemDraggable: function(treeItem){
     var tree = this;
 
@@ -20,21 +16,13 @@ Ext.define('TreesWithCards', {
       var dragSource = Ext.create('Ext.dd.DragSource', treeItem.getEl(), {
         treeItem: treeItem,
         getDragData: function() {
-          var ret = {
-            card: Ext.create('Rally.ui.cardboard.Card', {
-              record: treeItem.getRecord()    
-            }),
-            column: {
-              findCardInfo: function() {
-                return { 
-                  index: -1
-                };
-              }
-            }
+          var record = treeItem.getRecord();
+          return {
+            item: record,
+            records: [record]
           };
-          return ret;
         },
-        ddGroup: 'cardboard',
+        ddGroup: 'hr',
         isTarget: false,
         proxy: Ext.create('Ext.dd.StatusProxy', {
           animRepair: true,
@@ -80,12 +68,9 @@ Ext.define('TreesWithCards', {
       var card = Ext.create('Rally.ui.cardboard.Card', {
           record: record
       });
+      debugger;
       return {
-          xtype: 'treeswithcardsitem',
-          canDrag: true,
-          expanded: true,
-          record: record,
-          card: card 
+          xtype: 'rallyuserstorytreeitem'
       };
   }
 });
@@ -132,25 +117,30 @@ Ext.define('CustomApp', {
             operator: '='
         });
 
+        var piFilter = Ext.create('Rally.data.QueryFilter', {
+          property: 'PortfolioItem',
+          value: 'null',
+          operator: '='
+        });
+
         var childrenFilter = Ext.create('Rally.data.QueryFilter', {
             property: 'DirectChildrenCount',
             value: '0',
             operator: '='
         });
-        
-        
-        var filter = parentFilter.and(childrenFilter);
+                
+        var filter = parentFilter.and(childrenFilter.and(piFilter));
         
         var orphanStoryTree = Ext.create('TreesWithCards', {
             enableDragAndDrop: true,            
             dragDropGroupFn: function(record){
-                return 'cardboard';
+                return 'hr';
             },dragThisGroupOnMeFn: function(record){
-                return 'cardboard';
+                return 'hr';
             },
             topLevelStoreConfig: {
                 model: 'User Story',
-                fetch: ['FormattedID', 'Name', 'ObjectID', 'DirectChildrenCount'],
+                fetch: ['FormattedID', 'Name', 'ObjectID', 'DirectChildrenCount', 'Parent'],
                 filters: filter,
                 canDrag: true,
                 sorters: [{
@@ -158,7 +148,7 @@ Ext.define('CustomApp', {
                     direction: 'asc'
                 }],
                 listeners: {
-                    'load': function(store, records, successful, options) {
+                    load: function(store, records, successful, options) {
                         if (store.totalCount > 200) {
                             Rally.ui.notify.Notifier.showError({message: 'There are more than 200 orphaned stories.'});
                         }
@@ -175,29 +165,38 @@ Ext.define('CustomApp', {
         xtype: 'rallytreegrid',
         store: store,
         context: this.getContext(),
-        // enableInlineAdd: true,
         columnCfgs: [
           'Name',
           'ScheduleState',
           'Owner'
         ],
         rowActionColumnConfig: {
-              xtype: 'rallyrowactioncolumn',
-              rowActionsFn: function (record) {
-                  return [
-                    { 
-                      text: 'Split Child Stories...', 
-                      record: record, 
-                      handler: function(){ 
-                        Ext.create('childuserstoriespopover', {
-                            field: 'UserStory',
-                            record: record,
-                            target: 'rightcontainer'
-                        }, record);
-                      }
-                    }
-                  ];
-              }
+          xtype: 'rallyrowactioncolumn',
+          rowActionsFn: function (record) {
+              return [
+                { 
+                  text: 'Split Child Stories...', 
+                  record: record, 
+                  handler: function(){ 
+                    Ext.create('childuserstoriespopover', {
+                        field: 'UserStory',
+                        record: record,
+                        target: 'rightcontainer'
+                    }, record);
+                  }
+                }
+              ];
+          }
+        },
+        viewConfig: {
+          xtype: 'rallytreeview',
+          animate: false,
+          loadMask: false,
+          forceFit: true,
+          plugins: [
+              'customdragdrop',
+              'rallyviewvisibilitylistener'
+          ]
         },
         padding: '5'
       });

@@ -5,6 +5,7 @@
    "sdk": "2.0",
    "javascript": [
       "js/ChildUserStoryPopover.js",
+      "DragDrop.js",
       "App.js"
    ],
    "css": [
