@@ -130,13 +130,17 @@
           var record = this.selectedItemsDictionary[key];          
           record.set('Parent', parent.get("_ref"));          
           record.save({
-            callback: function(record, operation) {
-              
-            },
+            callback: this._recordSaveCallback,
             scope: this           
           });
         }
       }
+    },
+
+    _recordSaveCallback: function(record, operation) {
+      _.each(this.idsToRefresh, function(id) {
+        Ext.ComponentQuery.query('#'+id)[0].refresh();
+      }, this);
     },
 
     initComponent: function() {

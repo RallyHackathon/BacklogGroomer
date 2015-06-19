@@ -263,7 +263,8 @@ Ext.define('CustomApp', {
                   Ext.create('childuserstoriespopover', {
                     field: 'UserStory',
                     record: record,
-                    target: 'leftcontainer'
+                    target: 'leftcontainer',
+                    idsToRefresh: ['storyTree', 'orphanTree', 'unparentedTree']
                   }, record);
                 }
               }
