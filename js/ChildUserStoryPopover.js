@@ -2,10 +2,6 @@
   Ext.define('ChildUserStoriesPopover', {
     alias: 'childuserstoriespopover',
     extend: 'Rally.ui.popover.Popover',
-    requires: [
-      'Rally.ui.popover.ChildItemsListView'
-    ],
-
     clientMetrics: [
       {
         event: 'show',
@@ -28,8 +24,13 @@
     layout: 'autocontainer',
 
     constructor: function(config, record) {
-      var items = [ 
-        Ext.merge(
+      this.newParent = Ext.create('Rally.ui.combobox.ArtifactSearchComboBox', {
+        storeConfig: {
+            models: ['userstory']
+        }
+      });
+      
+      this.childrenGrid = Ext.merge(
           {
             xtype: 'rallygrid',
             itemId: 'listview',
@@ -83,25 +84,27 @@
             }
         }, 
         config.listViewConfig
-      ),
-      {
-        xtype: 'rallyartifactsearchcombobox',
-        storeConfig: {
-            models: ['userstory']
-        }
-      },
-      {
-        xtype: 'rallybutton',
-        text: 'Move stories',
-        handler: function() {
-            Ext.Msg.alert('Button', 'You clicked me');
-        }
-      }];
+      );
+      
+      var items = [ 
+        this.childrenGrid,
+        this.newParent,
+        {
+          xtype: 'rallybutton',
+          text: 'Move stories',
+          handler: Ext.bind(this._moveStories, this)
+        }];
 
       config.items = Ext.merge(items, config.items);
       this.record = config.record;
 
       this.callParent(arguments);
+    },
+    
+    _moveStories: function() {
+      var parent = this.newParent.getRecord();
+      
+      Ext.Msg.alert('Button', 'You clicked me');
     },
 
     initComponent: function() {

@@ -83,6 +83,7 @@ Ext.define('CustomApp', {
       this.add([ 
         {
           xtype: 'panel',
+          id: 'leftcontainer',
           bodyPadding: 5,
           flex: 1,
           align: 'stretch',
@@ -111,6 +112,7 @@ Ext.define('CustomApp', {
         },
         {
           xtype: 'panel',
+          id: 'rightcontainer',
           bodyPadding: 5,
           flex: 2,
           align: 'stretch',
@@ -201,26 +203,26 @@ Ext.define('CustomApp', {
       var orphanStoryTree = Ext.create('DragDropTree', {
           enableDragAndDrop: true,            
           dragDropGroupFn: function(record){
-              return 'hr';
+            return 'hr';
           },dragThisGroupOnMeFn: function(record){
-              return 'hr';
+            return 'hr';
           },
           topLevelStoreConfig: {
-              model: 'User Story',
-              fetch: ['FormattedID', 'Name', 'ObjectID', 'DirectChildrenCount', 'Parent'],
-              filters: filter,
-              canDrag: true,
-              sorters: [{
-                  property: 'Rank',
-                  direction: 'asc'
-              }],
-              listeners: {
-                  load: function(store, records, successful, options) {
-                      if (store.totalCount > 200) {
-                          Rally.ui.notify.Notifier.showError({message: 'There are more than 200 orphaned stories.'});
-                      }
-                  }
+            model: 'User Story',
+            fetch: ['FormattedID', 'Name', 'ObjectID', 'DirectChildrenCount', 'Parent'],
+            filters: filter,
+            canDrag: true,
+            sorters: [{
+              property: 'Rank',
+              direction: 'asc'
+            }],
+            listeners: {
+              load: function(store, records, successful, options) {
+                if (store.totalCount > 200) {
+                  Rally.ui.notify.Notifier.showError({message: 'There are more than 200 orphaned stories.'});
+                }
               }
+            }
           }            
       });
       
@@ -240,19 +242,19 @@ Ext.define('CustomApp', {
         rowActionColumnConfig: {
           xtype: 'rallyrowactioncolumn',
           rowActionsFn: function (record) {
-              return [
-                { 
-                  text: 'Split Child Stories...', 
-                  record: record, 
-                  handler: function(){ 
-                    Ext.create('childuserstoriespopover', {
-                        field: 'UserStory',
-                        record: record,
-                        target: 'rightcontainer'
-                    }, record);
-                  }
+            return [
+              { 
+                text: 'Split Child Stories...', 
+                record: record, 
+                handler: function(){ 
+                  Ext.create('childuserstoriespopover', {
+                    field: 'UserStory',
+                    record: record,
+                    target: 'leftcontainer'
+                  }, record);
                 }
-              ];
+              }
+            ];
           }
         },
         viewConfig: {
@@ -261,8 +263,8 @@ Ext.define('CustomApp', {
           loadMask: false,
           forceFit: true,
           plugins: [
-              'customdragdrop',
-              'rallyviewvisibilitylistener'
+            'customdragdrop',
+            'rallyviewvisibilitylistener'
           ]
         }
       });
