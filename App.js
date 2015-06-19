@@ -202,6 +202,7 @@ Ext.define('CustomApp', {
           'ScheduleState',
           'Owner'
         ],
+        enableRanking: false,
         refresh: function(overModel) {
           this.destroy();
           _buildStoryTree(overModel);
