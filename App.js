@@ -188,6 +188,9 @@ Ext.define('CustomApp', {
                 }
               }
             }
+          },
+          treeItemConfigForRecordFn: function() {
+            return {xtype: 'rallyuserstorytreeitem'};
           }            
       });
       
