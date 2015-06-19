@@ -110,14 +110,11 @@
     _onChildSelect: function(rowModel, record, rowIndex, options) {
       var id = record.get('ObjectID');
       this.selectedItemsDictionary[id] = record;
-      console.log(this.selectedItemsDictionary);
     },
     
     _onChildDeselect: function(rowModel, record, rowIndex, options) {
-      var id = record.get('ObjectID');      
-            
+      var id = record.get('ObjectID');
       delete this.selectedItemsDictionary[id];
-      console.log(this.selectedItemsDictionary);
     },
     
     _moveStories: function() {
@@ -129,12 +126,9 @@
       }
       
       for (var key in this.selectedItemsDictionary) {
-        if (this.selectedItemsDictionary.hasOwnProperty(key)) {
-          
-          var record = this.selectedItemsDictionary[key];
-          
-          record.set('Parent', parent.get("_ref"));
-          
+        if (this.selectedItemsDictionary.hasOwnProperty(key)) {          
+          var record = this.selectedItemsDictionary[key];          
+          record.set('Parent', parent.get("_ref"));          
           record.save({
             callback: function(record, operation) {
               

@@ -119,14 +119,11 @@
     _onChildSelect: function(rowModel, record, rowIndex, options) {
       var id = record.get('ObjectID');
       this.selectedItemsDictionary[id] = record;
-      console.log(this.selectedItemsDictionary);
     },
     
     _onChildDeselect: function(rowModel, record, rowIndex, options) {
-      var id = record.get('ObjectID');      
-            
+      var id = record.get('ObjectID');
       delete this.selectedItemsDictionary[id];
-      console.log(this.selectedItemsDictionary);
     },
     
     _moveStories: function() {
@@ -138,12 +135,9 @@
       }
       
       for (var key in this.selectedItemsDictionary) {
-        if (this.selectedItemsDictionary.hasOwnProperty(key)) {
-          
-          var record = this.selectedItemsDictionary[key];
-          
-          record.set('Parent', parent.get("_ref"));
-          
+        if (this.selectedItemsDictionary.hasOwnProperty(key)) {          
+          var record = this.selectedItemsDictionary[key];          
+          record.set('Parent', parent.get("_ref"));          
           record.save({
             callback: function(record, operation) {
               
@@ -499,12 +493,18 @@ Ext.define('CustomApp', {
         operator: '='
       });
 
-      if(Rally.environment.externalContext === undefined)
-      {
-        return parentFilter;
+      var subModules = null;
+      
+      if(Rally.environment.externalContext !== undefined) {
+        subModules = Rally.environment.externalContext.subscription.Modules;
+      }
+      else if(Rally.environment.rallyEnvironment.context.context !== undefined){
+        subModules = Rally.environment.rallyEnvironment.context.context.subscription.Modules;
       }
       
-      var subModules = Rally.environment.externalContext.subscription.Modules;
+      if(subModules == null) {
+        return parentFilter;
+      }
 
       return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;
     },

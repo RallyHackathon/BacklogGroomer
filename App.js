@@ -162,12 +162,18 @@ Ext.define('CustomApp', {
         operator: '='
       });
 
-      if(Rally.environment.externalContext === undefined)
-      {
-        return parentFilter;
+      var subModules = null;
+      
+      if(Rally.environment.externalContext !== undefined) {
+        subModules = Rally.environment.externalContext.subscription.Modules;
+      }
+      else if(Rally.environment.rallyEnvironment.context.context !== undefined){
+        subModules = Rally.environment.rallyEnvironment.context.context.subscription.Modules;
       }
       
-      var subModules = Rally.environment.externalContext.subscription.Modules;
+      if(subModules == null) {
+        return parentFilter;
+      }
 
       return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;
     },
