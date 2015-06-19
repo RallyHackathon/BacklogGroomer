@@ -56,7 +56,7 @@ Ext.define('CustomApp', {
       });
     
       this.add([{
-        html: "<h3>Select a story from the left menu and drag it to the right to assign a new parent.</h3>",
+        html: '<h3 style="margin-left:10px">Select a story from the left menu and drag it to the right to assign a new parent.</h3>',
         xtype: "panel"
       },{
           xtype: 'container',
@@ -240,6 +240,8 @@ Ext.define('CustomApp', {
           ]
         }
       });
+
+      if (expandNode) storyTree.expandNode(expandNode);
     },
     
     _onUnparentedDataLoaded: function(store, data) {
