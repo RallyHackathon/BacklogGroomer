@@ -86,7 +86,7 @@ Ext.define('CustomApp', {
           id: 'leftcontainer',
           bodyPadding: 5,
           flex: 1,
-          align: 'stretch',
+          layout: 'hbox',
           items: [{
             itemId: 'accContainer',
             layout: 'accordion',
