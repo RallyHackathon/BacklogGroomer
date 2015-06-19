@@ -143,6 +143,9 @@ Ext.define('customdragdrop', {
           callback: function(record, operation) {
             delete record._dragAndDropped;
             this.view.ownerCt.setLoading(false);
+            _.each(this.idsToRefresh, function(id) {
+                Ext.ComponentQuery.query('#'+id)[0].refresh();
+            }, this);
           },
           scope: this           
         });

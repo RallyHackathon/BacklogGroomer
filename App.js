@@ -150,11 +150,21 @@ Ext.define('CustomApp', {
     },
 
     _getParentFilters: function() {
-      return Ext.create('Rally.data.QueryFilter', {
+      var parentFilter = Ext.create('Rally.data.QueryFilter', {
         property: 'Parent',
         value: 'null',
         operator: '='
       });
+
+      var piFilter = Ext.create('Rally.data.QueryFilter', {
+        property: 'PortfolioItem',
+        value: 'null',
+        operator: '='
+      });
+
+      var subModules = Rally.environment.externalContext.subscription.Modules;
+
+      return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;
     },
     
     _buildOrphanedStoryTree: function() {
@@ -169,6 +179,7 @@ Ext.define('CustomApp', {
         var filter = parentFilter.and(childrenFilter);
         
         var orphanStoryTree = Ext.create('DragDropTree', {
+            id: 'orphanTree',
             enableDragAndDrop: true,            
             dragDropGroupFn: function(record){
                 return 'hr';
@@ -194,13 +205,14 @@ Ext.define('CustomApp', {
             }            
         });
         
-        this.down('#orphanStories').add(orphanStoryTree);
+        this.orphanStoryTree = this.down('#orphanStories').add(orphanStoryTree);
     },
 
     _buildUnparentedStoryTree: function() {
       var filter = this._getParentFilters();
       
-      var orphanStoryTree = Ext.create('DragDropTree', {
+      var unparentedStoryTree = Ext.create('DragDropTree', {
+          id: 'unparentedTree',
           enableDragAndDrop: true,            
           dragDropGroupFn: function(record){
             return 'hr';
@@ -226,12 +238,13 @@ Ext.define('CustomApp', {
           }            
       });
       
-      this.down('#unparentedStories').add(orphanStoryTree);
+      this.unparentedStoryTree = this.down('#unparentedStories').add(unparentedStoryTree);
     },
     
     _onStoreBuilt: function(store) {
       this.down('#storygrid').add({
         xtype: 'rallytreegrid',
+        id: 'storyTree',
         store: store,
         context: this.getContext(),
         columnCfgs: [
@@ -263,8 +276,11 @@ Ext.define('CustomApp', {
           loadMask: false,
           forceFit: true,
           plugins: [
-            'customdragdrop',
-            'rallyviewvisibilitylistener'
+              {
+                ptype: 'customdragdrop',
+                idsToRefresh: ['storyTree', 'orphanTree', 'unparentedTree']
+              },
+              'rallyviewvisibilitylistener'
           ]
         }
       });
