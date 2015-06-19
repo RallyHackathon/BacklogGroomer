@@ -11,10 +11,6 @@
   Ext.define('ChildUserStoriesPopover', {
     alias: 'childuserstoriespopover',
     extend: 'Rally.ui.popover.Popover',
-    requires: [
-      'Rally.ui.popover.ChildItemsListView'
-    ],
-
     clientMetrics: [
       {
         event: 'show',
@@ -37,8 +33,14 @@
     layout: 'autocontainer',
 
     constructor: function(config, record) {
-      var items = [ 
-        Ext.merge(
+      this.selectedItemsDictionary = {};
+      this.newParent = Ext.create('Rally.ui.combobox.ArtifactSearchComboBox', {
+        storeConfig: {
+            models: ['userstory']
+        }
+      });
+      
+      this.childrenGrid = Ext.merge(
           {
             xtype: 'rallygrid',
             itemId: 'listview',
@@ -74,7 +76,12 @@
                 dataIndex: 'ScheduleState',
                 width: 180
               }
-            ]
+            ], 
+            listeners: {
+                select: this._onChildSelect,
+                deselect: this._onChildDeselect,
+                scope: this
+            }  
           },{
             model: Ext.identityFn('HierarchicalRequirement'),
             parentProperty: 'Parent',
@@ -92,25 +99,59 @@
             }
         }, 
         config.listViewConfig
-      ),
-      {
-        xtype: 'rallyartifactsearchcombobox',
-        storeConfig: {
-            models: ['userstory']
-        }
-      },
-      {
-        xtype: 'rallybutton',
-        text: 'Move stories',
-        handler: function() {
-            Ext.Msg.alert('Button', 'You clicked me');
-        }
-      }];
+      );
+      
+      var items = [ 
+        this.childrenGrid,
+        this.newParent,
+        {
+          xtype: 'rallybutton',
+          text: 'Move stories',
+          handler: Ext.bind(this._moveStories, this)
+        }];
 
       config.items = Ext.merge(items, config.items);
       this.record = config.record;
 
       this.callParent(arguments);
+    },
+    
+    _onChildSelect: function(rowModel, record, rowIndex, options) {
+      var id = record.get('ObjectID');
+      this.selectedItemsDictionary[id] = record;
+      console.log(this.selectedItemsDictionary);
+    },
+    
+    _onChildDeselect: function(rowModel, record, rowIndex, options) {
+      var id = record.get('ObjectID');      
+            
+      delete this.selectedItemsDictionary[id];
+      console.log(this.selectedItemsDictionary);
+    },
+    
+    _moveStories: function() {
+      var parent = this.newParent.getRecord();
+      
+      if(!parent) {
+        Ext.Msg.alert('The EPIC Split', 'You must select a new parent.');
+        return;
+      }
+      
+      for (var key in this.selectedItemsDictionary) {
+        if (this.selectedItemsDictionary.hasOwnProperty(key)) {
+          
+          var record = this.selectedItemsDictionary[key];
+          
+          record.set('Parent', parent.get("_ref"));
+          
+          record.save({
+            callback: function(record, operation) {
+              
+            },
+            scope: this           
+          });
+        }
+      }
     },
 
     initComponent: function() {
@@ -281,6 +322,9 @@
           callback: function(record, operation) {
             delete record._dragAndDropped;
             this.view.ownerCt.setLoading(false);
+            _.each(this.idsToRefresh, function(id) {
+                Ext.ComponentQuery.query('#'+id)[0].refresh();
+            }, this);
           },
           scope: this           
         });
@@ -291,7 +335,7 @@
         Ext.destroy(this.dragTracker, this.dragZone, this.dropZone);
     }
 });
-                Ext.define('TreesWithCards', {
+                Ext.define('DragDropTree', {
   extend: 'Rally.ui.tree.Tree',
   requires: ['Rally.ui.tree.UserStoryTreeItem'],
 
@@ -358,13 +402,9 @@
   },
   
   treeItemConfigForRecordFn: function(record){
-      var card = Ext.create('Rally.ui.cardboard.Card', {
-          record: record
-      });
-      debugger;
-      return {
-          xtype: 'rallyuserstorytreeitem'
-      };
+    return {
+        xtype: 'rallyuserstorytreeitem'
+    };
   }
 });
 
@@ -376,45 +416,101 @@ Ext.define('CustomApp', {
         align: 'stretch'
     },
 
-    launch: function() {
-      this.leftContainer = Ext.create('Ext.Container', {
-        flex: 1,
-        align: 'stretch'
-      });
+    launch: function() {      
+      this.add([ 
+        {
+          xtype: 'panel',
+          id: 'leftcontainer',
+          bodyPadding: 5,
+          flex: 1,
+          align: 'stretch',
+          items: [{
+            itemId: 'accContainer',
+            layout: 'accordion',
+            defaults: {
+                bodyPadding: 10
+            },
+            height: '100%',
+            items: [
+              {
+                  title: 'Orphaned Stories',
+                  itemId: 'orphanStories',
+                  autoScroll: true
+              },
+              {
+                  title: 'Unparented Stories',
+                  itemId: 'unparentedStories',
+                  autoScroll: true,
+                  height: '100%'
+              }
+            ],
+            flex: 1
+          }]
+        },
+        {
+          xtype: 'panel',
+          id: 'rightcontainer',
+          bodyPadding: 5,
+          flex: 2,
+          align: 'stretch',
+          items: [{
+            layout: 'accordion',
+            defaults: {
+                bodyPadding: 10
+            },
+            height: '100%',
+            items: [{
+              title: 'All Stories',
+              itemId: 'storygrid',
+              autoScroll: true
+            }]
+          }]          
+        }
+      ]);
       
-      this.rightContainer = Ext.create('Ext.Container', {
-        id: 'rightcontainer',
-        flex: 2,
-        align: 'stretch'
-      });
-      
-      this.add([this.leftContainer, this.rightContainer]);
-          
-      this.buildOrphanedStoryTree();
+      this._loadGrids();
+    },
+    
+    _loadGrids: function() {
+      this._buildOrphanedStoryTree();
+      this._buildUnparentedStoryTree();
       
       Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
         models: ['userstory'],
         autoLoad: true,
-        enableHierarchy: true
+        enableHierarchy: true,        
+        filters: this._getParentFilters()
       }).then({
         success: this._onStoreBuilt,
         scope: this
       });
-      
     },
 
-    buildOrphanedStoryTree: function() {
-        var parentFilter = Ext.create('Rally.data.QueryFilter', {
-            property: 'Parent',
-            value: 'null',
-            operator: '='
-        });
+    _getParentFilters: function() {
+      var parentFilter = Ext.create('Rally.data.QueryFilter', {
+        property: 'Parent',
+        value: 'null',
+        operator: '='
+      });
 
-        var piFilter = Ext.create('Rally.data.QueryFilter', {
-          property: 'PortfolioItem',
-          value: 'null',
-          operator: '='
-        });
+      var piFilter = Ext.create('Rally.data.QueryFilter', {
+        property: 'PortfolioItem',
+        value: 'null',
+        operator: '='
+      });
+
+      if(Rally.environment.externalContext === undefined)
+      {
+        return parentFilter;
+      }
+      
+      var subModules = Rally.environment.externalContext.subscription.Modules;
+
+      return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;
+    },
+    
+    _buildOrphanedStoryTree: function() {
+        var parentFilter = this._getParentFilters();
 
         var childrenFilter = Ext.create('Rally.data.QueryFilter', {
             property: 'DirectChildrenCount',
@@ -422,9 +518,10 @@ Ext.define('CustomApp', {
             operator: '='
         });
                 
-        var filter = parentFilter.and(childrenFilter.and(piFilter));
+        var filter = parentFilter.and(childrenFilter);
         
-        var orphanStoryTree = Ext.create('TreesWithCards', {
+        var orphanStoryTree = Ext.create('DragDropTree', {
+            id: 'orphanTree',
             enableDragAndDrop: true,            
             dragDropGroupFn: function(record){
                 return 'hr';
@@ -450,12 +547,46 @@ Ext.define('CustomApp', {
             }            
         });
         
-        this.leftContainer.add(orphanStoryTree);
+        this.orphanStoryTree = this.down('#orphanStories').add(orphanStoryTree);
+    },
+
+    _buildUnparentedStoryTree: function() {
+      var filter = this._getParentFilters();
+      
+      var unparentedStoryTree = Ext.create('DragDropTree', {
+          id: 'unparentedTree',
+          enableDragAndDrop: true,            
+          dragDropGroupFn: function(record){
+            return 'hr';
+          },dragThisGroupOnMeFn: function(record){
+            return 'hr';
+          },
+          topLevelStoreConfig: {
+            model: 'User Story',
+            fetch: ['FormattedID', 'Name', 'ObjectID', 'DirectChildrenCount', 'Parent'],
+            filters: filter,
+            canDrag: true,
+            sorters: [{
+              property: 'Rank',
+              direction: 'asc'
+            }],
+            listeners: {
+              load: function(store, records, successful, options) {
+                if (store.totalCount > 200) {
+                  Rally.ui.notify.Notifier.showError({message: 'There are more than 200 orphaned stories.'});
+                }
+              }
+            }
+          }            
+      });
+      
+      this.unparentedStoryTree = this.down('#unparentedStories').add(unparentedStoryTree);
     },
     
     _onStoreBuilt: function(store) {
-      this.rightContainer.add({
+      this.down('#storygrid').add({
         xtype: 'rallytreegrid',
+        id: 'storyTree',
         store: store,
         context: this.getContext(),
         columnCfgs: [
@@ -466,19 +597,19 @@ Ext.define('CustomApp', {
         rowActionColumnConfig: {
           xtype: 'rallyrowactioncolumn',
           rowActionsFn: function (record) {
-              return [
-                { 
-                  text: 'Split Child Stories...', 
-                  record: record, 
-                  handler: function(){ 
-                    Ext.create('childuserstoriespopover', {
-                        field: 'UserStory',
-                        record: record,
-                        target: 'rightcontainer'
-                    }, record);
-                  }
+            return [
+              { 
+                text: 'Split Child Stories...', 
+                record: record, 
+                handler: function(){ 
+                  Ext.create('childuserstoriespopover', {
+                    field: 'UserStory',
+                    record: record,
+                    target: 'leftcontainer'
+                  }, record);
                 }
-              ];
+              }
+            ];
           }
         },
         viewConfig: {
@@ -487,11 +618,13 @@ Ext.define('CustomApp', {
           loadMask: false,
           forceFit: true,
           plugins: [
-              'customdragdrop',
+              {
+                ptype: 'customdragdrop',
+                idsToRefresh: ['storyTree', 'orphanTree', 'unparentedTree']
+              },
               'rallyviewvisibilitylistener'
           ]
-        },
-        padding: '5'
+        }
       });
     },
     
@@ -517,8 +650,7 @@ Ext.define('CustomApp', {
               dataIndex: 'Name',
               flex: 1
           }
-        ],
-        padding: '5'
+        ]
       });
     }
 });

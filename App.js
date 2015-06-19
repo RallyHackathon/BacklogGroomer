@@ -162,6 +162,11 @@ Ext.define('CustomApp', {
         operator: '='
       });
 
+      if(Rally.environment.externalContext === undefined)
+      {
+        return parentFilter;
+      }
+      
       var subModules = Rally.environment.externalContext.subscription.Modules;
 
       return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;

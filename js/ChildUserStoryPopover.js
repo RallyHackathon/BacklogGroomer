@@ -24,6 +24,7 @@
     layout: 'autocontainer',
 
     constructor: function(config, record) {
+      this.selectedItemsDictionary = {};
       this.newParent = Ext.create('Rally.ui.combobox.ArtifactSearchComboBox', {
         storeConfig: {
             models: ['userstory']
@@ -66,7 +67,12 @@
                 dataIndex: 'ScheduleState',
                 width: 180
               }
-            ]
+            ], 
+            listeners: {
+                select: this._onChildSelect,
+                deselect: this._onChildDeselect,
+                scope: this
+            }  
           },{
             model: Ext.identityFn('HierarchicalRequirement'),
             parentProperty: 'Parent',
@@ -101,10 +107,42 @@
       this.callParent(arguments);
     },
     
+    _onChildSelect: function(rowModel, record, rowIndex, options) {
+      var id = record.get('ObjectID');
+      this.selectedItemsDictionary[id] = record;
+      console.log(this.selectedItemsDictionary);
+    },
+    
+    _onChildDeselect: function(rowModel, record, rowIndex, options) {
+      var id = record.get('ObjectID');      
+            
+      delete this.selectedItemsDictionary[id];
+      console.log(this.selectedItemsDictionary);
+    },
+    
     _moveStories: function() {
       var parent = this.newParent.getRecord();
       
-      Ext.Msg.alert('Button', 'You clicked me');
+      if(!parent) {
+        Ext.Msg.alert('The EPIC Split', 'You must select a new parent.');
+        return;
+      }
+      
+      for (var key in this.selectedItemsDictionary) {
+        if (this.selectedItemsDictionary.hasOwnProperty(key)) {
+          
+          var record = this.selectedItemsDictionary[key];
+          
+          record.set('Parent', parent.get("_ref"));
+          
+          record.save({
+            callback: function(record, operation) {
+              
+            },
+            scope: this           
+          });
+        }
+      }
     },
 
     initComponent: function() {
