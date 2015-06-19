@@ -79,48 +79,58 @@ Ext.define('CustomApp', {
         align: 'stretch'
     },
 
-    launch: function() {
-      this.leftContainer = Ext.create('Ext.panel.Panel', {
-        bodyPadding: 5,
-        flex: 1,
-        align: 'stretch',
-        items: [{
-          itemId: 'accContainer',
-          layout: 'accordion',
-          defaults: {
-              bodyPadding: 10
-          },
-          height: '100%',
-          items: [
-            {
-                title: 'Orphaned Stories',
-                itemId: 'orphanStories',
-                resizable: true,
-                autoScroll: true
+    launch: function() {      
+      this.add([ 
+        {
+          xtype: 'panel',
+          bodyPadding: 5,
+          flex: 1,
+          align: 'stretch',
+          items: [{
+            itemId: 'accContainer',
+            layout: 'accordion',
+            defaults: {
+                bodyPadding: 10
             },
-            {
-                title: 'Unparented Stories',
-                itemId: 'unparentedStories',
-                resizable: true,
-                autoScroll: true,
-                height: '100%'
-            }
-          ],
-          flex: 1
-        }]
-      });
-      
-      this.rightContainer = Ext.create('Ext.panel.Panel', {
-        bodyPadding: 5,
-        id: 'rightcontainer',
-        flex: 2,
-        align: 'stretch'
-      });
-      
-      this.add([this.leftContainer, this.rightContainer]);
+            height: '100%',
+            items: [
+              {
+                  title: 'Orphaned Stories',
+                  itemId: 'orphanStories',
+                  autoScroll: true
+              },
+              {
+                  title: 'Unparented Stories',
+                  itemId: 'unparentedStories',
+                  autoScroll: true,
+                  height: '100%'
+              }
+            ],
+            flex: 1
+          }]
+        },
+        {
+          xtype: 'panel',
+          bodyPadding: 5,
+          flex: 2,
+          align: 'stretch',
+          items: [{
+            layout: 'accordion',
+            defaults: {
+                bodyPadding: 10
+            },
+            height: '100%',
+            items: [{
+              title: 'All Stories',
+              itemId: 'storygrid',
+              autoScroll: true
+            }]
+          }]          
+        }
+      ]);
           
-      this.buildOrphanedStoryTree();
-      this.buildUnparentedStoryTree();
+      this._buildOrphanedStoryTree();
+      this._buildUnparentedStoryTree();
       
       Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
         models: ['userstory'],
@@ -133,7 +143,7 @@ Ext.define('CustomApp', {
       
     },
 
-    buildOrphanedStoryTree: function() {
+    _buildOrphanedStoryTree: function() {
         var parentFilter = Ext.create('Rally.data.QueryFilter', {
             property: 'Parent',
             value: 'null',
@@ -178,7 +188,7 @@ Ext.define('CustomApp', {
         this.down('#orphanStories').add(orphanStoryTree);
     },
 
-    buildUnparentedStoryTree: function() {
+    _buildUnparentedStoryTree: function() {
       var parentFilter = Ext.create('Rally.data.QueryFilter', {
           property: 'Parent',
           value: 'null',
@@ -217,7 +227,7 @@ Ext.define('CustomApp', {
     },
     
     _onStoreBuilt: function(store) {
-      this.rightContainer.add({
+      this.down('#storygrid').add({
         xtype: 'rallytreegrid',
         store: store,
         context: this.getContext(),
