@@ -128,28 +128,35 @@ Ext.define('CustomApp', {
           }]          
         }
       ]);
-          
+      
+      this._loadGrids();
+    },
+    
+    _loadGrids: function() {
       this._buildOrphanedStoryTree();
       this._buildUnparentedStoryTree();
       
       Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
         models: ['userstory'],
         autoLoad: true,
-        enableHierarchy: true
+        enableHierarchy: true,        
+        filters: this._getParentFilters()
       }).then({
         success: this._onStoreBuilt,
         scope: this
       });
-      
     },
 
+    _getParentFilters: function() {
+      return Ext.create('Rally.data.QueryFilter', {
+        property: 'Parent',
+        value: 'null',
+        operator: '='
+      });
+    },
+    
     _buildOrphanedStoryTree: function() {
-        var parentFilter = Ext.create('Rally.data.QueryFilter', {
-            property: 'Parent',
-            value: 'null',
-            operator: '='
-        });
-
+        var parentFilter = this._getParentFilters();
 
         var childrenFilter = Ext.create('Rally.data.QueryFilter', {
             property: 'DirectChildrenCount',
@@ -189,13 +196,7 @@ Ext.define('CustomApp', {
     },
 
     _buildUnparentedStoryTree: function() {
-      var parentFilter = Ext.create('Rally.data.QueryFilter', {
-          property: 'Parent',
-          value: 'null',
-          operator: '='
-      });
-
-      var filter = parentFilter;
+      var filter = this._getParentFilters();
       
       var orphanStoryTree = Ext.create('DragDropTree', {
           enableDragAndDrop: true,            
