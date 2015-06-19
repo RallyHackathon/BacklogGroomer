@@ -113,11 +113,6 @@ Ext.define('CustomApp', {
             operator: '='
         });
 
-        var piFilter = Ext.create('Rally.data.QueryFilter', {
-          property: 'PortfolioItem',
-          value: 'null',
-          operator: '='
-        });
 
         var childrenFilter = Ext.create('Rally.data.QueryFilter', {
             property: 'DirectChildrenCount',
@@ -125,7 +120,7 @@ Ext.define('CustomApp', {
             operator: '='
         });
                 
-        var filter = parentFilter.and(childrenFilter.and(piFilter));
+        var filter = parentFilter.and(childrenFilter);
         
         var orphanStoryTree = Ext.create('DragDropTree', {
             enableDragAndDrop: true,            
