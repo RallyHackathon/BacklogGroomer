@@ -2,61 +2,74 @@ Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
     layout: {
-        type: 'hbox',
-        align: 'stretch'
+      type: 'vbox',
+      align: 'stretch'
     },
 
     launch: function() {      
-      this.add([ 
-        {
-          xtype: 'panel',
-          id: 'leftcontainer',
-          bodyPadding: 5,
-          flex: 1,
-          layout: 'hbox',
-          items: [{
-            itemId: 'accContainer',
-            layout: 'accordion',
-            defaults: {
-                bodyPadding: 10
+      var leftPanel = Ext.create('Ext.panel.Panel', {
+        id: 'leftcontainer',
+        bodyPadding: 5,
+        flex: 1,
+        layout: 'hbox',
+        items: [{
+          itemId: 'accContainer',
+          layout: 'accordion',
+          defaults: {
+              bodyPadding: 10
+          },
+          height: '100%',
+          items: [
+            {
+                title: 'Orphaned Stories',
+                itemId: 'orphanStories',
+                autoScroll: true
             },
-            height: '100%',
-            items: [
-              {
-                  title: 'Orphaned Stories',
-                  itemId: 'orphanStories',
-                  autoScroll: true
-              },
-              {
-                  title: 'Unparented Stories',
-                  itemId: 'unparentedStories',
-                  autoScroll: true,
-                  height: '100%'
-              }
-            ],
-            flex: 1
+            {
+                title: 'Unparented Stories',
+                itemId: 'unparentedStories',
+                autoScroll: true,
+                height: '100%'
+            }
+          ],
+          flex: 1
+        }]
+      });
+      
+      var rightPanel = Ext.create('Ext.panel.Panel', {
+        id: 'rightcontainer',
+        bodyPadding: 5,
+        flex: 2,
+        align: 'stretch',
+        items: [{
+          layout: 'accordion',
+          defaults: {
+              bodyPadding: 10
+          },
+          height: '100%',
+          items: [{
+            title: 'All Stories',
+            itemId: 'storygrid',
+            autoScroll: true
           }]
-        },
-        {
-          xtype: 'panel',
-          id: 'rightcontainer',
-          bodyPadding: 5,
-          flex: 2,
+        }]  
+      });
+    
+      this.add([{
+            xtype: 'text',
+            text: 'Backlog Groomer'
+        },{
+          xtype: 'container',
           align: 'stretch',
-          items: [{
-            layout: 'accordion',
-            defaults: {
-                bodyPadding: 10
-            },
-            height: '100%',
-            items: [{
-              title: 'All Stories',
-              itemId: 'storygrid',
-              autoScroll: true
-            }]
-          }]          
-        }
-      ]);
+          layout: {
+            type: 'hbox',
+            align: 'stretch'
+          },
+          items: [ 
+            leftPanel,
+            rightPanel
+          ]
+      }]);
       
       this._loadGrids();
     },
