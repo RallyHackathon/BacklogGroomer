@@ -493,19 +493,8 @@ Ext.define('CustomApp', {
         operator: '='
       });
 
-      var subModules = null;
+      var subModules = Rally.environment.getContext().getSubscription().Modules;
       
-      if(Rally.environment.externalContext !== undefined) {
-        subModules = Rally.environment.externalContext.subscription.Modules;
-      }
-      else if(Rally.environment.rallyEnvironment.context.context !== undefined){
-        subModules = Rally.environment.rallyEnvironment.context.context.subscription.Modules;
-      }
-      
-      if(subModules == null) {
-        return parentFilter;
-      }
-
       return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;
     },
     
