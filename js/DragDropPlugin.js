@@ -106,9 +106,10 @@ Ext.define('customdragdrop', {
                   draggingRecords = data.records,
                   indicatorY;
 
-                  if (!Ext.Array.contains(draggingRecords, overRecord) && (
-                      pos == 'before' && !me.containsRecordAtOffset(draggingRecords, overRecord, -1) ||
-                      pos == 'after' && !me.containsRecordAtOffset(draggingRecords, overRecord, 1))) 
+                  if (draggingRecords[0].get('_ref') !== overRecord.get('_ref') &&
+                     !Ext.Array.contains(draggingRecords, overRecord) && (
+                     pos == 'before' && !me.containsRecordAtOffset(draggingRecords, overRecord, -1) ||
+                     pos == 'after' && !me.containsRecordAtOffset(draggingRecords, overRecord, 1))) 
                   {
                     me.valid = true;
                     if (me.overRecord != overRecord || me.currentPosition != pos) {

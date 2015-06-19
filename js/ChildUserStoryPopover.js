@@ -107,6 +107,14 @@
           {
               xtype: 'panel',
               title: 'Select Children',
+              header: {
+                border: '0 1 0 0',
+                style: {
+                  borderColor: '#d6d6d6',
+                  borderStyle: 'solid'
+                },
+                cls: 'dialogHeader'
+              },
               flex: 2,
               bodyPadding: 5,
               items: [
@@ -116,6 +124,14 @@
           {
               xtype: 'panel',
               title: 'Select Parent',
+              header: {
+                border: '0 0 0 1',
+                style: {
+                  borderColor: '#d6d6d6',
+                  borderStyle: 'solid'
+                },
+                cls: 'dialogHeader'
+              },
               flex: 1,
               bodyPadding: 5,
               items: [

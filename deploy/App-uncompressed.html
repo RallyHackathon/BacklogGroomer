@@ -10,7 +10,7 @@
                 (function() {
   Ext.define('ChildUserStoriesPopover', {
     alias: 'childuserstoriespopover',
-    extend: 'Rally.ui.popover.Popover',
+    extend: 'Rally.ui.dialog.Dialog',
     clientMetrics: [
       {
         event: 'show',
@@ -24,17 +24,22 @@
 
     id: 'grid-popover',
     cls: 'grid-popover',
-    title: 'Select stories to move...',
+    title: 'Reparent Child Stories...',
     titleIconCls: 'icon-story',
 
     width: 750,
     maxHeight: 600,
 
     layout: 'autocontainer',
+    autoShow: true,
+    closable: true,
+    closeAction: 'destroy',
 
     constructor: function(config, record) {
       this.selectedItemsDictionary = {};
       this.newParent = Ext.create('Rally.ui.combobox.ArtifactSearchComboBox', {
+        emptyText: 'New Parent',
+        allowNoEntry: false,
         storeConfig: {
             models: ['userstory']
         }
@@ -101,16 +106,56 @@
         config.listViewConfig
       );
       
-      var items = [ 
-        this.childrenGrid,
-        this.newParent,
-        {
-          xtype: 'rallybutton',
-          text: 'Move stories',
-          handler: Ext.bind(this._moveStories, this)
-        }];
-
-      config.items = Ext.merge(items, config.items);
+      var layoutContainer = Ext.create('Ext.container.Container', {
+        layout: {
+          type: 'hbox',
+          align: 'stretch'
+        },
+        padding: '5 5 5 5',
+        items: [ 
+          {
+              xtype: 'panel',
+              title: 'Select Children',
+              header: {
+                border: '0 1 0 0',
+                style: {
+                  borderColor: '#d6d6d6',
+                  borderStyle: 'solid'
+                },
+                cls: 'dialogHeader'
+              },
+              flex: 2,
+              bodyPadding: 5,
+              items: [
+                this.childrenGrid
+              ]
+          },        
+          {
+              xtype: 'panel',
+              title: 'Select Parent',
+              header: {
+                border: '0 0 0 1',
+                style: {
+                  borderColor: '#d6d6d6',
+                  borderStyle: 'solid'
+                },
+                cls: 'dialogHeader'
+              },
+              flex: 1,
+              bodyPadding: 5,
+              items: [
+                this.newParent,
+                {
+                  xtype: 'rallybutton',
+                  text: 'Move stories',
+                  handler: Ext.bind(this._moveStories, this)
+                }
+              ]
+          }
+        ]
+      });
+      
+      config.items = [layoutContainer];
       this.record = config.record;
 
       this.callParent(arguments);
@@ -139,13 +184,19 @@
           var record = this.selectedItemsDictionary[key];          
           record.set('Parent', parent.get("_ref"));          
           record.save({
-            callback: function(record, operation) {
-              
-            },
+            callback: this._recordSaveCallback,
             scope: this           
           });
         }
       }
+      
+      this.close();
+    },
+
+    _recordSaveCallback: function(record, operation) {
+      _.each(this.idsToRefresh, function(id) {
+        Ext.ComponentQuery.query('#'+id)[0].refresh();
+      }, this);
     },
 
     initComponent: function() {
@@ -271,6 +322,28 @@
                 view: this.view,
                 ddGroup: 'hr',
                 handleNodeDrop: function() {},
+                positionIndicator: function(node, data, e) {
+                  var me = this,
+                  view = me.view,
+                  pos = me.getPosition(e, node),
+                  overRecord = view.getRecord(node),
+                  draggingRecords = data.records,
+                  indicatorY;
+
+                  if (draggingRecords[0].get('_ref') !== overRecord.get('_ref') &&
+                     !Ext.Array.contains(draggingRecords, overRecord) && (
+                     pos == 'before' && !me.containsRecordAtOffset(draggingRecords, overRecord, -1) ||
+                     pos == 'after' && !me.containsRecordAtOffset(draggingRecords, overRecord, 1))) 
+                  {
+                    me.valid = true;
+                    if (me.overRecord != overRecord || me.currentPosition != pos) {
+                        me.overRecord = overRecord;
+                        me.currentPosition = pos;
+                    }
+                  } else {
+                      me.invalidateDrop();
+                  }
+                }
             });
         }
     },
@@ -316,6 +389,7 @@
           callback: function(record, operation) {
             delete record._dragAndDropped;
             this.view.ownerCt.setLoading(false);
+
             _.each(this.idsToRefresh, function(id) {
                 Ext.ComponentQuery.query('#'+id)[0].refresh();
             }, this);
@@ -401,8 +475,7 @@
     };
   }
 });
-
-Ext.define('CustomApp', {
+                Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
     layout: {
@@ -417,7 +490,7 @@ Ext.define('CustomApp', {
           id: 'leftcontainer',
           bodyPadding: 5,
           flex: 1,
-          align: 'stretch',
+          layout: 'hbox',
           items: [{
             itemId: 'accContainer',
             layout: 'accordion',
@@ -468,16 +541,7 @@ Ext.define('CustomApp', {
     _loadGrids: function() {
       this._buildOrphanedStoryTree();
       this._buildUnparentedStoryTree();
-      
-      Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
-        models: ['userstory'],
-        autoLoad: true,
-        enableHierarchy: true,        
-        filters: this._getParentFilters()
-      }).then({
-        success: this._onStoreBuilt,
-        scope: this
-      });
+      this._buildStoryTree();
     },
 
     _getParentFilters: function() {
@@ -497,6 +561,18 @@ Ext.define('CustomApp', {
       
       return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;
     },
+
+    _buildStoryTree: function() {
+      Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
+        models: ['userstory'],
+        autoLoad: true,
+        enableHierarchy: true,        
+        filters: this._getParentFilters()
+      }).then({
+        success: this._onStoreBuilt,
+        scope: this
+      });
+    },
     
     _buildOrphanedStoryTree: function() {
         var parentFilter = this._getParentFilters();
@@ -512,6 +588,7 @@ Ext.define('CustomApp', {
         var orphanStoryTree = Ext.create('DragDropTree', {
             id: 'orphanTree',
             enableDragAndDrop: true,            
+            emptyText: 'No oprhan stories',
             dragDropGroupFn: function(record){
                 return 'hr';
             },dragThisGroupOnMeFn: function(record){
@@ -544,7 +621,8 @@ Ext.define('CustomApp', {
       
       var unparentedStoryTree = Ext.create('DragDropTree', {
           id: 'unparentedTree',
-          enableDragAndDrop: true,            
+          enableDragAndDrop: true,           
+          emptyText: 'No unparented stories',      
           dragDropGroupFn: function(record){
             return 'hr';
           },dragThisGroupOnMeFn: function(record){
@@ -588,13 +666,14 @@ Ext.define('CustomApp', {
           rowActionsFn: function (record) {
             return [
               { 
-                text: 'Split Child Stories...', 
+                text: 'Reparent Child Stories...', 
                 record: record, 
                 handler: function(){ 
                   Ext.create('childuserstoriespopover', {
                     field: 'UserStory',
                     record: record,
-                    target: 'leftcontainer'
+                    target: 'leftcontainer',
+                    idsToRefresh: ['storyTree', 'orphanTree', 'unparentedTree']
                   }, record);
                 }
               }
@@ -656,8 +735,8 @@ Ext.define('CustomApp', {
 
 
     <style type="text/css">
-        .app {
-  /* Add app styles here */
+        .dialogHeader {
+  background-color: #d9e7f8;
 }
 
     </style>
