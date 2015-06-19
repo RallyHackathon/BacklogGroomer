@@ -56,9 +56,9 @@ Ext.define('CustomApp', {
       });
     
       this.add([{
-            xtype: 'text',
-            text: 'Backlog Groomer'
-        },{
+        html: "<h3>Select a story from the left menu and drag it to the right to assign a new parent.</h3>",
+        xtype: "panel"
+      },{
           xtype: 'container',
           align: 'stretch',
           layout: {
