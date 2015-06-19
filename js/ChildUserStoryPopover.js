@@ -28,13 +28,6 @@
 
     constructor: function(config, record) {
       this.selectedItemsDictionary = {};
-      this.newParent = Ext.create('Rally.ui.combobox.ArtifactSearchComboBox', {
-        emptyText: 'New Parent',
-        allowNoEntry: false,
-        storeConfig: {
-            models: ['userstory']
-        }
-      });
       
       this.childrenGrid = Ext.merge(
           {
@@ -97,6 +90,24 @@
         config.listViewConfig
       );
       
+      this.newParent = Ext.create('Rally.ui.combobox.ArtifactSearchComboBox', {
+        emptyText: 'New Parent',
+        allowNoEntry: false,
+        storeConfig: {
+            models: ['userstory']
+        },
+        listeners: {
+          select: this._onParentSelected,
+          scope: this
+        }
+      });
+      
+      this.moveButton = Ext.create('Rally.ui.Button', {
+        text: 'Move stories',
+        disabled: true,
+        handler: Ext.bind(this._moveStories, this)
+      });
+      
       var layoutContainer = Ext.create('Ext.container.Container', {
         layout: {
           type: 'hbox',
@@ -136,11 +147,7 @@
               bodyPadding: 5,
               items: [
                 this.newParent,
-                {
-                  xtype: 'rallybutton',
-                  text: 'Move stories',
-                  handler: Ext.bind(this._moveStories, this)
-                }
+                this.moveButton
               ]
           }
         ]
@@ -152,6 +159,10 @@
       this.callParent(arguments);
     },
     
+    _onParentSelected: function( combo, records, eOpts ) {
+      this.moveButton.enable();
+    },
+          
     _onChildSelect: function(rowModel, record, rowIndex, options) {
       var id = record.get('ObjectID');
       this.selectedItemsDictionary[id] = record;

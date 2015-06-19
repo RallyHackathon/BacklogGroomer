@@ -195,6 +195,7 @@ Ext.define('CustomApp', {
         xtype: 'rallytreegrid',
         id: 'storyTree',
         store: store,
+        enableBulkEdit: false,
         context: this.getContext(),
         columnCfgs: [
           'Name',
