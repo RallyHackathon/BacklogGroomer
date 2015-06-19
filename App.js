@@ -242,30 +242,5 @@ Ext.define('CustomApp', {
       });
 
       if (expandNode) storyTree.expandNode(expandNode);
-    },
-    
-    _onUnparentedDataLoaded: function(store, data) {
-   
-      this.leftContainer.add({
-        xtype: 'rallygrid',
-        showPagingToolbar: false,
-        showRowActionsColumn: false,
-        editable: false,
-        store: store,
-        columnCfgs: [
-          {
-              xtype: 'templatecolumn',
-              text: 'ID',
-              dataIndex: 'FormattedID',
-              width: 100,
-              tpl: Ext.create('Rally.ui.renderer.template.FormattedIDTemplate')
-          },
-          {
-              text: 'Name',
-              dataIndex: 'Name',
-              flex: 1
-          }
-        ]
-      });
     }
 });
