@@ -246,7 +246,6 @@ Ext.define('CustomApp', {
         xtype: 'rallygrid',
         showPagingToolbar: false,
         showRowActionsColumn: false,
-        enableRanking: true,
         editable: false,
         store: store,
         columnCfgs: [
