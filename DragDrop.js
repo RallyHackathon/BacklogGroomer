@@ -98,6 +98,27 @@ Ext.define('customdragdrop', {
                 view: this.view,
                 ddGroup: 'hr',
                 handleNodeDrop: function() {},
+                positionIndicator: function(node, data, e) {
+                  var me = this,
+                  view = me.view,
+                  pos = me.getPosition(e, node),
+                  overRecord = view.getRecord(node),
+                  draggingRecords = data.records,
+                  indicatorY;
+
+                  if (!Ext.Array.contains(draggingRecords, overRecord) && (
+                      pos == 'before' && !me.containsRecordAtOffset(draggingRecords, overRecord, -1) ||
+                      pos == 'after' && !me.containsRecordAtOffset(draggingRecords, overRecord, 1))) 
+                  {
+                    me.valid = true;
+                    if (me.overRecord != overRecord || me.currentPosition != pos) {
+                        me.overRecord = overRecord;
+                        me.currentPosition = pos;
+                    }
+                  } else {
+                      me.invalidateDrop();
+                  }
+                }
             });
         }
     },
@@ -143,6 +164,7 @@ Ext.define('customdragdrop', {
           callback: function(record, operation) {
             delete record._dragAndDropped;
             this.view.ownerCt.setLoading(false);
+
             _.each(this.idsToRefresh, function(id) {
                 Ext.ComponentQuery.query('#'+id)[0].refresh();
             }, this);

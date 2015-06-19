@@ -137,16 +137,7 @@ Ext.define('CustomApp', {
     _loadGrids: function() {
       this._buildOrphanedStoryTree();
       this._buildUnparentedStoryTree();
-      
-      Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
-        models: ['userstory'],
-        autoLoad: true,
-        enableHierarchy: true,        
-        filters: this._getParentFilters()
-      }).then({
-        success: this._onStoreBuilt,
-        scope: this
-      });
+      this._buildStoryTree();
     },
 
     _getParentFilters: function() {
@@ -165,6 +156,18 @@ Ext.define('CustomApp', {
       var subModules = Rally.environment.getContext().getSubscription().Modules;
       
       return _.contains(subModules, 'Rally Product Manager') ? parentFilter.and(piFilter) : parentFilter;
+    },
+
+    _buildStoryTree: function() {
+      Ext.create('Rally.data.wsapi.TreeStoreBuilder').build({
+        models: ['userstory'],
+        autoLoad: true,
+        enableHierarchy: true,        
+        filters: this._getParentFilters()
+      }).then({
+        success: this._onStoreBuilt,
+        scope: this
+      });
     },
     
     _buildOrphanedStoryTree: function() {
